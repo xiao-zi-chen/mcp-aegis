@@ -1,8 +1,8 @@
-# MCP-Shield Architecture
+# MCP Aegis Architecture
 
 ## 1. Goals
 
-MCP-Shield is an open-source security layer for the MCP ecosystem. It is designed to sit between MCP clients and third-party MCP servers, adding:
+MCP Aegis is an open-source security layer for the MCP ecosystem. It is designed to sit between MCP clients and third-party MCP servers, adding:
 
 - registry aggregation and security metadata
 - install-time verification and risk scoring
@@ -59,7 +59,7 @@ flowchart TB
         R3["Community feeds / advisories / CVEs"]
     end
 
-    subgraph Control["MCP-Shield Control Plane"]
+    subgraph Control["MCP Aegis Control Plane"]
         A["Registry Aggregator"]
         S["Scan Orchestrator"]
         G["Risk Scoring Engine"]
@@ -69,7 +69,7 @@ flowchart TB
         O[("Object Storage")]
     end
 
-    subgraph Data["MCP-Shield Data Plane"]
+    subgraph Data["MCP Aegis Data Plane"]
         I["Installer Resolver / CLI"]
         X["MCP Gateway / Broker"]
         L["Sandbox Launcher"]
@@ -121,8 +121,8 @@ flowchart TB
 ```mermaid
 flowchart LR
     U["User / Host IDE"] --> TB1
-    TB1{{"Trust Boundary A\nHost -> MCP-Shield"}}
-    TB1 --> SH["MCP-Shield Gateway + Resolver"]
+    TB1{{"Trust Boundary A\nHost -> MCP Aegis"}}
+    TB1 --> SH["MCP Aegis Gateway + Resolver"]
     SH --> TB2
     TB2{{"Trust Boundary B\nShield -> Third-Party MCP"}}
     TB2 --> RM["Remote MCP Servers"]

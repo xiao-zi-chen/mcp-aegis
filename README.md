@@ -1,8 +1,8 @@
-# MCP Shield
+# MCP Aegis
 
 Open-source security layer for the Model Context Protocol ecosystem.
 
-MCP Shield aims to make third-party MCP servers safer to discover, evaluate, install, and run. The initial direction is:
+MCP Aegis aims to make third-party MCP servers safer to discover, evaluate, install, and run. The initial direction is:
 
 - security-aware MCP subregistry
 - install-time verification and risk scoring
@@ -12,7 +12,7 @@ MCP Shield aims to make third-party MCP servers safer to discover, evaluate, ins
 
 ## Why This Project
 
-The MCP ecosystem is growing quickly, but trust and runtime isolation are still weak in most real-world setups. MCP Shield focuses on the missing control plane:
+The MCP ecosystem is growing quickly, but trust and runtime isolation are still weak in most real-world setups. MCP Aegis focuses on the missing control plane:
 
 - which MCP servers should be trusted
 - which versions are allowed
