@@ -1,0 +1,36 @@
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.venv/
+venv/
+
+# Node
+node_modules/
+dist/
+build/
+
+# Go
+bin/
+coverage.out
+
+# Logs
+*.log
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Local runtime data
+.cache/
+tmp/
+artifacts/
+data/
