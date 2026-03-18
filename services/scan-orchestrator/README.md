@@ -1,17 +1,30 @@
 # scan-orchestrator
 
-Planned responsibility:
+Current responsibility:
 
-- coordinate artifact fetching and analyzer execution
-- persist findings and evidence
-- request dynamic analysis for suspicious packages
+- run the first end-to-end detection loop
+- invoke analyzers on a target path
+- score findings into a risk class
+- evaluate policy and output an actionable decision report
 
 Suggested stack:
 
 - Python
 
-Initial scope:
+Current scope:
 
-- queue scan jobs
-- store findings
-- emit score inputs
+- local target scan orchestration
+- risk score generation
+- policy evaluation
+- JSON report output
+
+Run locally:
+
+```powershell
+$env:PYTHONPATH='services/analyzers/src;packages/sdk-python/src'
+python services/scan-orchestrator/src/mcpaegis_scan_orchestrator/main.py `
+  --target services/analyzers/tests/fixtures/malicious_server.py `
+  --policy packages/policy-spec/examples/default-policy.yaml `
+  --schema packages/policy-spec/schema.json `
+  --transport stdio
+```

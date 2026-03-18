@@ -33,13 +33,16 @@ Available now:
 - working `control-api` service
 - working `registry-sync` worker
 - initial Postgres migration set
+- working static analyzers for risky MCP code patterns
+- working policy evaluator
+- working end-to-end scan orchestrator
 
 Planned next:
 
 - Postgres-backed persistence for `control-api`
-- scan orchestrator and first analyzers
-- first analyzer set
+- richer analyzer coverage and evidence
 - CLI installer prototype
+- runtime sandbox launcher
 
 ## Architecture
 
@@ -64,6 +67,9 @@ See [docs/architecture.md](docs/architecture.md) for the current design, includi
 
 - [apps/control-api](apps/control-api)
 - [services/registry-sync](services/registry-sync)
+- [services/analyzers](services/analyzers)
+- [services/scan-orchestrator](services/scan-orchestrator)
+- [packages/sdk-python](packages/sdk-python)
 - [db/migrations/0001_initial.sql](db/migrations/0001_initial.sql)
 
 ## Quick Start
@@ -91,6 +97,17 @@ Example endpoints:
 - `GET /api/v1/servers/{name}`
 - `GET /api/v1/policies`
 - `GET /api/v1/policies/{name}`
+
+Run the detection pipeline against a target path:
+
+```powershell
+$env:PYTHONPATH='services/analyzers/src;packages/sdk-python/src'
+python services/scan-orchestrator/src/mcpaegis_scan_orchestrator/main.py `
+  --target services/analyzers/tests/fixtures/malicious_server.py `
+  --policy packages/policy-spec/examples/default-policy.yaml `
+  --schema packages/policy-spec/schema.json `
+  --transport stdio
+```
 
 ## MVP Direction
 

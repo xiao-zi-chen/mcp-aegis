@@ -1,13 +1,24 @@
 # analyzers
 
-Planned responsibility:
+Current responsibility:
 
-- hold static and dynamic analyzer modules
+- hold static analyzer modules for MCP packages and server code
 - emit structured findings instead of plain text
+- provide risk scoring inputs for policy evaluation
 
-Initial scope:
+Current scope:
 
 - subprocess and shell execution detector
-- filesystem access heuristic
+- filesystem mutation heuristic
 - outbound network heuristic
+- secret and environment access heuristic
+- listener exposure heuristic
 - suspicious metadata detector
+
+Run locally:
+
+```powershell
+cd services/analyzers
+$env:PYTHONPATH='src'
+python -m unittest discover -s tests -v
+```
