@@ -26,12 +26,17 @@ This repository is in the architecture phase.
 Available now:
 
 - initial system architecture
+- first threat model
+- first policy specification
+- reference policy schema and example bundle
+- implementation roadmap
 
 Planned next:
 
-- threat model
-- policy spec
-- MVP service skeleton
+- control plane skeleton
+- database schema
+- first analyzer set
+- CLI installer prototype
 
 ## Architecture
 
@@ -42,6 +47,15 @@ See [docs/architecture.md](docs/architecture.md) for the current design, includi
 - install and runtime flows
 - deployment topology
 - OSS-friendly repository structure
+
+## Core Documents
+
+- [docs/architecture.md](docs/architecture.md)
+- [docs/threat-model.md](docs/threat-model.md)
+- [docs/policy-spec.md](docs/policy-spec.md)
+- [docs/roadmap.md](docs/roadmap.md)
+- [packages/policy-spec/schema.json](packages/policy-spec/schema.json)
+- [packages/policy-spec/examples/default-policy.yaml](packages/policy-spec/examples/default-policy.yaml)
 
 ## MVP Direction
 

@@ -124,10 +124,10 @@ flowchart LR
     TB1{{"Trust Boundary A\nHost -> MCP Aegis"}}
     TB1 --> SH["MCP Aegis Gateway + Resolver"]
     SH --> TB2
-    TB2{{"Trust Boundary B\nShield -> Third-Party MCP"}}
+    TB2{{"Trust Boundary B\nAegis -> Third-Party MCP"}}
     TB2 --> RM["Remote MCP Servers"]
     SH --> TB3
-    TB3{{"Trust Boundary C\nShield -> Sandbox Runtime"}}
+    TB3{{"Trust Boundary C\nAegis -> Sandbox Runtime"}}
     TB3 --> LC["Local MCP Containers"]
     LC --> TB4
     TB4{{"Trust Boundary D\nRuntime -> Filesystem / Network / Secrets"}}
@@ -164,7 +164,7 @@ Responsibilities:
 - sync official MCP registry entries
 - ingest package metadata from npm, PyPI, OCI, and MCPB sources
 - normalize package identity, version, transport, maintainer, and publish time
-- expose a subregistry-compatible API with Shield-specific `_meta`
+- expose a subregistry-compatible API with Aegis-specific `_meta`
 
 Why this matters:
 
@@ -280,7 +280,7 @@ Recommended format:
 
 Responsibilities:
 
-- resolve MCP install requests against Shield policies
+- resolve MCP install requests against Aegis policies
 - fetch approved versions only
 - install with pinned digest or exact artifact reference
 - generate host-specific config for Cursor, Claude, Copilot, or generic MCP clients
@@ -353,13 +353,13 @@ Recommended sinks:
 ```mermaid
 sequenceDiagram
     participant Host as Host / IDE
-    participant CLI as Shield CLI / Resolver
-    participant Reg as Shield Subregistry
+    participant CLI as Aegis CLI / Resolver
+    participant Reg as Aegis Subregistry
     participant Policy as Policy Service
     participant Scan as Scan Engine
 
     Host->>CLI: install server X
-    CLI->>Reg: fetch metadata + Shield _meta
+    CLI->>Reg: fetch metadata + Aegis _meta
     CLI->>Policy: evaluate org policy
     alt fresh scan needed
         CLI->>Scan: request scan or wait for latest result
@@ -377,7 +377,7 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant Host as Host / IDE
-    participant GW as Shield Gateway
+    participant GW as Aegis Gateway
     participant Policy as Runtime Policy
     participant Launch as Sandbox Launcher
     participant Box as Isolated MCP Server
@@ -399,7 +399,7 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant Host as Host / IDE
-    participant GW as Shield Gateway
+    participant GW as Aegis Gateway
     participant Auth as Auth Adapter
     participant Remote as Remote MCP Server
     participant Audit as Audit Store
@@ -506,7 +506,7 @@ repo/
     gateway/          # Go
     control-api/      # Go or Python API facade
     admin-web/        # React
-    shield-cli/       # Go CLI
+    aegis-cli/        # Go CLI
   services/
     registry-sync/    # Python
     scan-orchestrator/# Python
@@ -534,7 +534,7 @@ Build these first:
 - static analyzer pipeline
 - risk scoring API
 - policy engine
-- Shield CLI installer
+- Aegis CLI installer
 - Docker-based sandbox for local stdio servers
 - basic audit log viewer
 

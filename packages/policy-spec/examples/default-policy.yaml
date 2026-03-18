@@ -1,0 +1,83 @@
+apiVersion: mcpaegis.io/v1alpha1
+kind: PolicyBundle
+metadata:
+  name: default-team-policy
+  version: 1
+  description: Default policy for evaluating third-party MCP servers.
+spec:
+  defaults:
+    installDecision: review
+    runtimeProfile: restricted
+    remoteAccess: deny
+  profiles:
+    sandbox:
+      trusted:
+        readOnlyRootFs: true
+        mounts:
+          - hostPath: ./project
+            containerPath: /workspace/project
+            readOnly: true
+        networkMode: egress-allowlist
+        network:
+          allow:
+            - host: api.github.com
+              ports: [443]
+        environment:
+          allow:
+            - GIT_AUTHOR_NAME
+            - GIT_AUTHOR_EMAIL
+        resources:
+          cpuShares: 256
+          memoryMb: 512
+          processLimit: 64
+          timeoutSeconds: 120
+      restricted:
+        readOnlyRootFs: true
+        mounts:
+          - hostPath: ./project
+            containerPath: /workspace/project
+            readOnly: true
+        networkMode: none
+        environment:
+          allow: []
+        resources:
+          cpuShares: 128
+          memoryMb: 256
+          processLimit: 32
+          timeoutSeconds: 60
+  rules:
+    - id: allow-verified-low-risk-stdio
+      match:
+        transport:
+          in: [stdio]
+        risk:
+          score:
+            lte: 24
+        ownership:
+          verified: true
+      action:
+        installDecision: allow
+        runtimeProfile: trusted
+        requireDigestPin: true
+        reason: Verified low-risk local server.
+    - id: restrict-high-risk
+      match:
+        risk:
+          score:
+            gte: 50
+      action:
+        installDecision: restricted
+        runtimeProfile: restricted
+        requireDigestPin: true
+        remoteAccess: deny
+        reason: High-risk packages require explicit review and restricted runtime.
+    - id: deny-unverified-remote
+      match:
+        remote:
+          url: "*"
+        ownership:
+          verified: false
+      action:
+        installDecision: deny
+        remoteAccess: deny
+        reason: Unverified remote MCP servers are denied by default.
