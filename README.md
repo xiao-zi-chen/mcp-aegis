@@ -36,6 +36,8 @@ Available now:
 - working static analyzers for risky MCP code patterns
 - working policy evaluator
 - working end-to-end scan orchestrator
+- persisted assessment reports queryable via `control-api`
+- PostgreSQL import SQL export for scan decisions
 
 Planned next:
 
@@ -95,6 +97,8 @@ Example endpoints:
 - `GET /readyz`
 - `GET /api/v1/servers`
 - `GET /api/v1/servers/{name}`
+- `GET /api/v1/assessments`
+- `GET /api/v1/assessments/{serverName}`
 - `GET /api/v1/policies`
 - `GET /api/v1/policies/{name}`
 
@@ -106,7 +110,10 @@ python services/scan-orchestrator/src/mcpaegis_scan_orchestrator/main.py `
   --target services/analyzers/tests/fixtures/malicious_server.py `
   --policy packages/policy-spec/examples/default-policy.yaml `
   --schema packages/policy-spec/schema.json `
-  --transport stdio
+  --transport stdio `
+  --server-name fixture/malicious-server `
+  --output services/scan-orchestrator/examples/reports/fixture-malicious-server.json `
+  --sql-output tmp/fixture-malicious-server.sql
 ```
 
 ## MVP Direction

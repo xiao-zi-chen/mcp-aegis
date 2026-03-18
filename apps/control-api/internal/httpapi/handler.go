@@ -24,6 +24,8 @@ func (h *Handler) Routes() http.Handler {
 	mux.HandleFunc("/readyz", h.handleReady)
 	mux.HandleFunc("/api/v1/servers", h.handleServers)
 	mux.HandleFunc("/api/v1/servers/", h.handleServerByName)
+	mux.HandleFunc("/api/v1/assessments", h.handleAssessments)
+	mux.HandleFunc("/api/v1/assessments/", h.handleAssessmentByName)
 	mux.HandleFunc("/api/v1/policies", h.handlePolicies)
 	mux.HandleFunc("/api/v1/policies/", h.handlePolicyByName)
 	return mux
@@ -114,6 +116,41 @@ func (h *Handler) handlePolicies(w http.ResponseWriter, r *http.Request) {
 		"policies": policies,
 		"count":    len(policies),
 	})
+}
+
+func (h *Handler) handleAssessments(w http.ResponseWriter, r *http.Request) {
+	assessments, err := h.store.ListAssessments(r.Context())
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{
+		"assessments": assessments,
+		"count":       len(assessments),
+	})
+}
+
+func (h *Handler) handleAssessmentByName(w http.ResponseWriter, r *http.Request) {
+	name := strings.TrimPrefix(r.URL.Path, "/api/v1/assessments/")
+	name, err := url.PathUnescape(name)
+	if err != nil || name == "" {
+		writeError(w, http.StatusBadRequest, "invalid assessment name")
+		return
+	}
+
+	assessment, ok, err := h.store.GetAssessment(r.Context(), name)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if !ok {
+		writeError(w, http.StatusNotFound, "assessment not found")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, assessment)
 }
 
 func (h *Handler) handlePolicyByName(w http.ResponseWriter, r *http.Request) {

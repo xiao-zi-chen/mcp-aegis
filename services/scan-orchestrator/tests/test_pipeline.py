@@ -18,6 +18,7 @@ class PipelineTest(unittest.TestCase):
     def test_pipeline_detects_and_restricts_malicious_fixture(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             output_path = Path(tmp_dir) / "report.json"
+            sql_output_path = Path(tmp_dir) / "report.sql"
             env = {
                 **os.environ,
                 "PYTHONPATH": os.pathsep.join(
@@ -39,8 +40,14 @@ class PipelineTest(unittest.TestCase):
                     str(SCHEMA),
                     "--transport",
                     "stdio",
+                    "--server-name",
+                    "fixture/malicious-server",
+                    "--server-version",
+                    "0.0.1",
                     "--output",
                     str(output_path),
+                    "--sql-output",
+                    str(sql_output_path),
                 ],
                 check=True,
                 cwd=ROOT / "services" / "scan-orchestrator",
@@ -49,9 +56,14 @@ class PipelineTest(unittest.TestCase):
 
             report = json.loads(output_path.read_text(encoding="utf-8"))
             self.assertGreaterEqual(report["scanReport"]["findingCount"], 3)
+            self.assertEqual(report["server"]["name"], "fixture/malicious-server")
             self.assertIn(report["policyDecision"]["decision"], {"review", "restricted", "deny", "allow"})
             self.assertNotEqual(report["policyDecision"]["decision"], "allow")
             self.assertGreaterEqual(len(report["recommendedActions"]), 1)
+
+            sql_payload = sql_output_path.read_text(encoding="utf-8")
+            self.assertIn("INSERT INTO policy_evaluations", sql_payload)
+            self.assertIn("fixture/malicious-server", sql_payload)
 
 
 if __name__ == "__main__":

@@ -17,6 +17,7 @@ Current scope:
 - readiness endpoint
 - registry snapshot-backed server listing
 - policy bundle listing and lookup
+- persisted assessment listing and lookup
 
 Run locally:
 
@@ -30,3 +31,4 @@ Important environment variables:
 - `MCP_AEGIS_API_ADDRESS`
 - `MCP_AEGIS_SNAPSHOT_PATH`
 - `MCP_AEGIS_POLICIES_DIR`
+- `MCP_AEGIS_REPORTS_DIR`

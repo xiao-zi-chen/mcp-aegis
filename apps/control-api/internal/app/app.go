@@ -19,7 +19,7 @@ type App struct {
 }
 
 func New(cfg config.Config) (*App, error) {
-	store := filestore.New(cfg.SnapshotPath, cfg.PoliciesDir)
+	store := filestore.New(cfg.SnapshotPath, cfg.PoliciesDir, cfg.ReportsDir)
 	handler := httpapi.New(store)
 
 	server := &http.Server{

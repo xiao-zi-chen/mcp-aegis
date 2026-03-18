@@ -15,6 +15,7 @@ type fakeStore struct {
 	snapshot domain.Snapshot
 	ready    bool
 	policies []domain.PolicyBundle
+	assess   []domain.Assessment
 }
 
 func (f fakeStore) Snapshot(context.Context) (domain.Snapshot, bool, error) {
@@ -45,6 +46,19 @@ func (f fakeStore) GetPolicy(_ context.Context, name string) (domain.PolicyBundl
 		}
 	}
 	return domain.PolicyBundle{}, false, nil
+}
+
+func (f fakeStore) ListAssessments(context.Context) ([]domain.Assessment, error) {
+	return f.assess, nil
+}
+
+func (f fakeStore) GetAssessment(_ context.Context, serverName string) (domain.Assessment, bool, error) {
+	for _, assessment := range f.assess {
+		if assessment.Server.Name == serverName {
+			return assessment, true, nil
+		}
+	}
+	return domain.Assessment{}, false, nil
 }
 
 func TestHandleServers(t *testing.T) {
@@ -85,5 +99,58 @@ func TestHandleReadyNotLoaded(t *testing.T) {
 
 	if rec.Code != http.StatusServiceUnavailable {
 		t.Fatalf("expected status 503, got %d", rec.Code)
+	}
+}
+
+func TestHandleAssessments(t *testing.T) {
+	h := New(fakeStore{
+		assess: []domain.Assessment{
+			{
+				Server: domain.AssessmentServer{Name: "fixture/malicious-server"},
+				RiskScore: domain.RiskScore{
+					Score:         41,
+					DecisionClass: "review",
+				},
+			},
+		},
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/assessments", nil)
+	rec := httptest.NewRecorder()
+	h.Routes().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", rec.Code)
+	}
+
+	body := rec.Body.String()
+	if !strings.Contains(body, `"fixture/malicious-server"`) {
+		t.Fatalf("expected body to contain assessment, body=%s", body)
+	}
+}
+
+func TestHandleAssessmentByName(t *testing.T) {
+	h := New(fakeStore{
+		assess: []domain.Assessment{
+			{
+				Server: domain.AssessmentServer{Name: "fixture/malicious-server"},
+				PolicyDecision: domain.PolicyDecision{
+					Decision: "review",
+				},
+			},
+		},
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/assessments/fixture%2Fmalicious-server", nil)
+	rec := httptest.NewRecorder()
+	h.Routes().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", rec.Code)
+	}
+
+	body := rec.Body.String()
+	if !strings.Contains(body, `"decision":"review"`) {
+		t.Fatalf("expected body to contain decision, body=%s", body)
 	}
 }

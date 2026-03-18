@@ -12,4 +12,6 @@ type Store interface {
 	GetServer(ctx context.Context, name string) (domain.ServerSummary, bool, error)
 	ListPolicies(ctx context.Context) ([]domain.PolicyBundle, error)
 	GetPolicy(ctx context.Context, name string) (domain.PolicyBundle, bool, error)
+	ListAssessments(ctx context.Context) ([]domain.Assessment, error)
+	GetAssessment(ctx context.Context, serverName string) (domain.Assessment, bool, error)
 }

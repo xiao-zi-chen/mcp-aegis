@@ -17,6 +17,7 @@ Current scope:
 - risk score generation
 - policy evaluation
 - JSON report output
+- PostgreSQL import SQL export
 
 Run locally:
 
@@ -26,5 +27,8 @@ python services/scan-orchestrator/src/mcpaegis_scan_orchestrator/main.py `
   --target services/analyzers/tests/fixtures/malicious_server.py `
   --policy packages/policy-spec/examples/default-policy.yaml `
   --schema packages/policy-spec/schema.json `
-  --transport stdio
+  --transport stdio `
+  --server-name fixture/malicious-server `
+  --output services/scan-orchestrator/examples/reports/fixture-malicious-server.json `
+  --sql-output tmp/fixture-malicious-server.sql
 ```

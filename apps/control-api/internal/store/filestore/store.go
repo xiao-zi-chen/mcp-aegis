@@ -21,12 +21,14 @@ var _ store.Store = (*Store)(nil)
 type Store struct {
 	snapshotPath string
 	policiesDir  string
+	reportsDir   string
 }
 
-func New(snapshotPath, policiesDir string) *Store {
+func New(snapshotPath, policiesDir, reportsDir string) *Store {
 	return &Store{
 		snapshotPath: snapshotPath,
 		policiesDir:  policiesDir,
+		reportsDir:   reportsDir,
 	}
 }
 
@@ -123,6 +125,56 @@ func (s *Store) GetPolicy(ctx context.Context, name string) (domain.PolicyBundle
 	return domain.PolicyBundle{}, false, nil
 }
 
+func (s *Store) ListAssessments(_ context.Context) ([]domain.Assessment, error) {
+	entries, err := os.ReadDir(s.reportsDir)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("read reports dir: %w", err)
+	}
+
+	assessments := make([]domain.Assessment, 0, len(entries))
+	for _, entry := range entries {
+		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".json") {
+			continue
+		}
+
+		assessment, ok, err := loadAssessment(filepath.Join(s.reportsDir, entry.Name()))
+		if err != nil {
+			return nil, err
+		}
+		if !ok {
+			continue
+		}
+		assessments = append(assessments, assessment)
+	}
+
+	sort.Slice(assessments, func(i, j int) bool {
+		if assessments[i].Server.Name == assessments[j].Server.Name {
+			return assessments[i].GeneratedAt.After(assessments[j].GeneratedAt)
+		}
+		return assessments[i].Server.Name < assessments[j].Server.Name
+	})
+
+	return assessments, nil
+}
+
+func (s *Store) GetAssessment(ctx context.Context, serverName string) (domain.Assessment, bool, error) {
+	assessments, err := s.ListAssessments(ctx)
+	if err != nil {
+		return domain.Assessment{}, false, err
+	}
+
+	for _, assessment := range assessments {
+		if assessment.Server.Name == serverName {
+			return assessment, true, nil
+		}
+	}
+
+	return domain.Assessment{}, false, nil
+}
+
 func loadPolicy(path string) (domain.PolicyBundle, error) {
 	bytes, err := os.ReadFile(path)
 	if err != nil {
@@ -143,6 +195,27 @@ func loadPolicy(path string) (domain.PolicyBundle, error) {
 		SourcePath:  path,
 		RawDocument: string(bytes),
 	}, nil
+}
+
+func loadAssessment(path string) (domain.Assessment, bool, error) {
+	bytes, err := os.ReadFile(path)
+	if err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			return domain.Assessment{}, false, nil
+		}
+		return domain.Assessment{}, false, fmt.Errorf("read assessment %s: %w", path, err)
+	}
+
+	var assessment domain.Assessment
+	if err := json.Unmarshal(bytes, &assessment); err != nil {
+		return domain.Assessment{}, false, fmt.Errorf("decode assessment %s: %w", path, err)
+	}
+
+	if assessment.Server.Name == "" {
+		return domain.Assessment{}, false, nil
+	}
+
+	return assessment, true, nil
 }
 
 func extractPolicyMetadata(document string) (apiVersion, kind, name string, version int, description string) {

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from datetime import datetime, timezone
 import json
 from pathlib import Path
 
@@ -29,10 +30,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="Path to the policy schema JSON file.",
     )
     parser.add_argument("--server-name", default="", help="Canonical server name for audit output.")
+    parser.add_argument("--server-version", default="", help="Server version associated with the scan target.")
+    parser.add_argument("--registry", default="manual", help="Registry or source label for the scanned target.")
     parser.add_argument("--transport", action="append", default=[], help="Transport values such as stdio or streamable-http.")
     parser.add_argument("--ownership-verified", action="store_true", help="Whether the publisher or operator ownership is verified.")
     parser.add_argument("--remote-url", default="", help="Remote MCP URL if applicable.")
     parser.add_argument("--output", default="", help="Optional JSON report output path.")
+    parser.add_argument("--sql-output", default="", help="Optional PostgreSQL import SQL output path.")
     return parser
 
 
@@ -41,7 +45,7 @@ def main() -> None:
 
     report = scan_path(args.target)
     score = score_findings(report.findings)
-    bundle = load_policy_bundle(args.policy, _resolve_repo_path(args.schema))
+    bundle = load_policy_bundle(_resolve_repo_path(args.policy), _resolve_repo_path(args.schema))
     context = {
         "server": {"name": args.server_name},
         "transport": args.transport,
@@ -53,6 +57,19 @@ def main() -> None:
     recommendations = build_recommendations(report.findings, decision)
 
     document = {
+        "reportVersion": "v1alpha1",
+        "generatedAt": datetime.now(timezone.utc).isoformat(),
+        "scannerName": "mcpaegis-static",
+        "scannerVersion": "0.1.0",
+        "server": {
+            "name": args.server_name or _default_server_name(args.target),
+            "version": args.server_version,
+            "registry": args.registry,
+            "targetPath": str(Path(args.target)),
+            "transport": args.transport,
+            "ownershipVerified": args.ownership_verified,
+            "remoteUrl": args.remote_url,
+        },
         "scanReport": report.to_dict(),
         "riskScore": score,
         "policyDecision": decision.to_dict(),
@@ -66,6 +83,16 @@ def main() -> None:
         output_path.write_text(payload, encoding="utf-8")
     else:
         print(payload)
+
+    if args.sql_output:
+        try:
+            from mcpaegis_scan_orchestrator.postgres_export import build_sql
+        except ModuleNotFoundError:
+            from postgres_export import build_sql
+
+        sql_output_path = Path(args.sql_output)
+        sql_output_path.parent.mkdir(parents=True, exist_ok=True)
+        sql_output_path.write_text(build_sql(document), encoding="utf-8")
 
 
 def _resolve_repo_path(path: str) -> str:
@@ -82,6 +109,10 @@ def _resolve_repo_path(path: str) -> str:
             return str(resolved)
 
     return path
+
+
+def _default_server_name(target: str) -> str:
+    return Path(target).stem.replace("_", "-")
 
 
 if __name__ == "__main__":
