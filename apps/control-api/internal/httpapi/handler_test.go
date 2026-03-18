@@ -222,3 +222,31 @@ func TestHandleAssessmentSummary(t *testing.T) {
 		t.Fatalf("unexpected summary body=%s", body)
 	}
 }
+
+func TestHandleRuntimePlanByName(t *testing.T) {
+	h := New(fakeStore{
+		assess: []domain.Assessment{
+			{
+				Server:         domain.AssessmentServer{Name: "fixture/malicious-server"},
+				PolicyDecision: domain.PolicyDecision{Decision: "review", RuntimeProfile: "restricted"},
+				RuntimePlan: map[string]any{
+					"profileName":   "restricted",
+					"executionMode": "sandboxed",
+				},
+			},
+		},
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/runtime-plans/fixture%2Fmalicious-server", nil)
+	rec := httptest.NewRecorder()
+	h.Routes().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", rec.Code)
+	}
+
+	body := rec.Body.String()
+	if !strings.Contains(body, `"executionMode":"sandboxed"`) {
+		t.Fatalf("unexpected runtime plan body=%s", body)
+	}
+}

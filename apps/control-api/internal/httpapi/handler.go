@@ -29,6 +29,7 @@ func (h *Handler) Routes() http.Handler {
 	mux.HandleFunc("/api/v1/assessments", h.handleAssessments)
 	mux.HandleFunc("/api/v1/assessments/", h.handleAssessmentByName)
 	mux.HandleFunc("/api/v1/assessment-summary", h.handleAssessmentSummary)
+	mux.HandleFunc("/api/v1/runtime-plans/", h.handleRuntimePlanByName)
 	mux.HandleFunc("/api/v1/policies", h.handlePolicies)
 	mux.HandleFunc("/api/v1/policies/", h.handlePolicyByName)
 	return mux
@@ -216,6 +217,31 @@ func (h *Handler) handlePolicyByName(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, policy)
+}
+
+func (h *Handler) handleRuntimePlanByName(w http.ResponseWriter, r *http.Request) {
+	name := strings.TrimPrefix(r.URL.Path, "/api/v1/runtime-plans/")
+	name, err := url.PathUnescape(name)
+	if err != nil || name == "" {
+		writeError(w, http.StatusBadRequest, "invalid runtime plan name")
+		return
+	}
+
+	assessment, ok, err := h.store.GetAssessment(r.Context(), name)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	if !ok {
+		writeError(w, http.StatusNotFound, "runtime plan not found")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{
+		"server":         assessment.Server,
+		"policyDecision": assessment.PolicyDecision,
+		"runtimePlan":    assessment.RuntimePlan,
+	})
 }
 
 func writeError(w http.ResponseWriter, status int, message string) {

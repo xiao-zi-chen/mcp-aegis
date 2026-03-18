@@ -60,6 +60,8 @@ class PipelineTest(unittest.TestCase):
             self.assertIn(report["policyDecision"]["decision"], {"review", "restricted", "deny", "allow"})
             self.assertNotEqual(report["policyDecision"]["decision"], "allow")
             self.assertGreaterEqual(len(report["recommendedActions"]), 1)
+            self.assertEqual(report["runtimePlan"]["executionMode"], "sandboxed")
+            self.assertTrue(report["runtimePlan"]["requiresManualApproval"])
 
             sql_payload = sql_output_path.read_text(encoding="utf-8")
             self.assertIn("INSERT INTO policy_evaluations", sql_payload)

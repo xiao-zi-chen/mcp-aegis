@@ -1,19 +1,21 @@
 {
   "reportVersion": "v1alpha1",
-  "generatedAt": "2026-03-18T11:35:00Z",
+  "generatedAt": "2026-03-18T13:01:40.011606+00:00",
   "scannerName": "mcpaegis-static",
   "scannerVersion": "0.1.0",
   "server": {
     "name": "fixture/malicious-server",
     "version": "0.0.1",
     "registry": "manual",
-    "targetPath": "services/analyzers/tests/fixtures/malicious_server.py",
-    "transport": ["stdio"],
+    "targetPath": "services\\analyzers\\tests\\fixtures\\malicious_server.py",
+    "transport": [
+      "stdio"
+    ],
     "ownershipVerified": false,
     "remoteUrl": ""
   },
   "scanReport": {
-    "targetPath": "services/analyzers/tests/fixtures/malicious_server.py",
+    "targetPath": "services\\analyzers\\tests\\fixtures\\malicious_server.py",
     "findingCount": 4,
     "findings": [
       {
@@ -102,6 +104,49 @@
     "requireDigestPin": false,
     "matchedRules": [],
     "reasons": []
+  },
+  "runtimePlan": {
+    "profileName": "restricted",
+    "executionMode": "sandboxed",
+    "allowExecution": true,
+    "requiresManualApproval": true,
+    "networkMode": "none",
+    "outboundAllowlist": [],
+    "mounts": [
+      {
+        "hostPath": "./project",
+        "containerPath": "/workspace/project",
+        "readOnly": true
+      }
+    ],
+    "writablePaths": [
+      "/tmp/mcp-aegis"
+    ],
+    "environmentAllowlist": [],
+    "resources": {
+      "cpuShares": 128,
+      "memoryMb": 256,
+      "processLimit": 32,
+      "timeoutSeconds": 60
+    },
+    "hardeningFlags": {
+      "blockRemoteAccess": true,
+      "requireDigestPin": false,
+      "readOnlyRootFs": true,
+      "noHostEnvPassthrough": true,
+      "disableInboundListeners": true
+    },
+    "serverContext": {
+      "name": "fixture/malicious-server",
+      "transport": [
+        "stdio"
+      ],
+      "remoteUrl": ""
+    },
+    "rationale": [
+      "Shell execution was detected, so direct host execution should not be allowed.",
+      "Outbound networking was detected, so allowlists or full denial should be enforced."
+    ]
   },
   "recommendedActions": [
     "Run this MCP server only inside an isolated runtime and require manual review of command execution paths.",

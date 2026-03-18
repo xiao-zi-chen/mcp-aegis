@@ -4,6 +4,7 @@ Current responsibility:
 
 - load and validate policy bundles
 - evaluate policy rules against scan results and server metadata
+- resolve runtime plans from policy profiles and findings
 
 Run locally:
 

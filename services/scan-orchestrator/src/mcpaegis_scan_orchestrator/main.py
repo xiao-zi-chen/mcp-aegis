@@ -9,6 +9,7 @@ from mcpaegis_analyzers.scanner import scan_path
 from mcpaegis_analyzers.scoring import score_findings
 from mcpaegis_policy.evaluator import evaluate_policy
 from mcpaegis_policy.loader import load_policy_bundle
+from mcpaegis_policy.planner import build_runtime_plan
 
 try:
     from mcpaegis_scan_orchestrator.recommendations import build_recommendations
@@ -55,6 +56,16 @@ def main() -> None:
     }
     decision = evaluate_policy(bundle, context)
     recommendations = build_recommendations(report.findings, decision)
+    runtime_plan = build_runtime_plan(
+        bundle,
+        decision,
+        [finding.to_dict() for finding in report.findings],
+        {
+            "name": args.server_name or _default_server_name(args.target),
+            "transport": args.transport,
+            "remoteUrl": args.remote_url,
+        },
+    )
 
     document = {
         "reportVersion": "v1alpha1",
@@ -73,6 +84,7 @@ def main() -> None:
         "scanReport": report.to_dict(),
         "riskScore": score,
         "policyDecision": decision.to_dict(),
+        "runtimePlan": runtime_plan,
         "recommendedActions": recommendations,
     }
 

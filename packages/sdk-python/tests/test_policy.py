@@ -3,6 +3,7 @@ from pathlib import Path
 
 from mcpaegis_policy.evaluator import evaluate_policy
 from mcpaegis_policy.loader import load_policy_bundle
+from mcpaegis_policy.planner import build_runtime_plan
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -56,6 +57,29 @@ class PolicyEvaluationTest(unittest.TestCase):
         )
 
         self.assertEqual(result.decision, "deny")
+
+    def test_runtime_plan_is_resolved_from_profile(self) -> None:
+        result = evaluate_policy(
+            self.bundle,
+            {
+                "transport": ["stdio"],
+                "risk": {"score": 55, "class": "restricted"},
+                "ownership": {"verified": True},
+                "remote": {"url": ""},
+            },
+        )
+
+        plan = build_runtime_plan(
+            self.bundle,
+            result,
+            [{"finding_key": "filesystem-write"}, {"finding_key": "shell-exec"}],
+            {"name": "fixture/malicious-server", "transport": ["stdio"], "remoteUrl": ""},
+        )
+
+        self.assertEqual(plan["profileName"], "restricted")
+        self.assertEqual(plan["executionMode"], "sandboxed")
+        self.assertIn("/tmp/mcp-aegis", plan["writablePaths"])
+        self.assertTrue(plan["hardeningFlags"]["readOnlyRootFs"])
 
 
 if __name__ == "__main__":

@@ -16,6 +16,7 @@ Current scope:
 - local target scan orchestration
 - risk score generation
 - policy evaluation
+- concrete runtime plan generation from policy profiles
 - JSON report output
 - PostgreSQL import SQL export
 

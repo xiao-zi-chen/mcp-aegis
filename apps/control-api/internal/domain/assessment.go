@@ -11,6 +11,7 @@ type Assessment struct {
 	ScanReport         ScanReport       `json:"scanReport"`
 	RiskScore          RiskScore        `json:"riskScore"`
 	PolicyDecision     PolicyDecision   `json:"policyDecision"`
+	RuntimePlan        map[string]any   `json:"runtimePlan"`
 	RecommendedActions []string         `json:"recommendedActions"`
 }
 
