@@ -21,6 +21,7 @@ Current scope:
 - assessment filtering by decision, score, category, and query text
 - assessment summary endpoint for operator dashboards
 - runtime plan lookup endpoint for an individual server assessment
+- runtime plan endpoint also returns sandbox spec and launch audit event
 
 Run locally:
 

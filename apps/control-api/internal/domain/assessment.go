@@ -12,6 +12,8 @@ type Assessment struct {
 	RiskScore          RiskScore        `json:"riskScore"`
 	PolicyDecision     PolicyDecision   `json:"policyDecision"`
 	RuntimePlan        map[string]any   `json:"runtimePlan"`
+	SandboxSpec        map[string]any   `json:"sandboxSpec"`
+	LaunchAuditEvent   map[string]any   `json:"launchAuditEvent"`
 	RecommendedActions []string         `json:"recommendedActions"`
 }
 

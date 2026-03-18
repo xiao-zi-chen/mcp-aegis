@@ -62,6 +62,9 @@ class PipelineTest(unittest.TestCase):
             self.assertGreaterEqual(len(report["recommendedActions"]), 1)
             self.assertEqual(report["runtimePlan"]["executionMode"], "sandboxed")
             self.assertTrue(report["runtimePlan"]["requiresManualApproval"])
+            self.assertEqual(report["sandboxSpec"]["engine"], "docker")
+            self.assertEqual(report["launchAuditEvent"]["eventType"], "runtime-plan-generated")
+            self.assertEqual(report["sandboxSpec"]["dockerCommand"][0], "docker")
 
             sql_payload = sql_output_path.read_text(encoding="utf-8")
             self.assertIn("INSERT INTO policy_evaluations", sql_payload)

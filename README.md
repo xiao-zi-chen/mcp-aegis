@@ -40,6 +40,7 @@ Available now:
 - PostgreSQL import SQL export for scan decisions
 - assessment filtering and summary query endpoints
 - concrete runtime plan generation and runtime plan API endpoint
+- planned sandbox spec generation with dry-run Docker command output
 
 Planned next:
 
@@ -116,6 +117,7 @@ python services/scan-orchestrator/src/mcpaegis_scan_orchestrator/main.py `
   --schema packages/policy-spec/schema.json `
   --transport stdio `
   --server-name fixture/malicious-server `
+  --container-image python:3.11-slim `
   --output services/scan-orchestrator/examples/reports/fixture-malicious-server.json `
   --sql-output tmp/fixture-malicious-server.sql
 ```

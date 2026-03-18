@@ -238,9 +238,11 @@ func (h *Handler) handleRuntimePlanByName(w http.ResponseWriter, r *http.Request
 	}
 
 	writeJSON(w, http.StatusOK, map[string]any{
-		"server":         assessment.Server,
-		"policyDecision": assessment.PolicyDecision,
-		"runtimePlan":    assessment.RuntimePlan,
+		"server":           assessment.Server,
+		"policyDecision":   assessment.PolicyDecision,
+		"runtimePlan":      assessment.RuntimePlan,
+		"sandboxSpec":      assessment.SandboxSpec,
+		"launchAuditEvent": assessment.LaunchAuditEvent,
 	})
 }
 

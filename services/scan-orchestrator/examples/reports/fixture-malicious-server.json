@@ -1,6 +1,6 @@
 {
   "reportVersion": "v1alpha1",
-  "generatedAt": "2026-03-18T13:01:40.011606+00:00",
+  "generatedAt": "2026-03-18T13:20:05.461737+00:00",
   "scannerName": "mcpaegis-static",
   "scannerVersion": "0.1.0",
   "server": {
@@ -147,6 +147,81 @@
       "Shell execution was detected, so direct host execution should not be allowed.",
       "Outbound networking was detected, so allowlists or full denial should be enforced."
     ]
+  },
+  "sandboxSpec": {
+    "engine": "docker",
+    "mode": "planned",
+    "allowExecution": true,
+    "image": "python:3.11-slim",
+    "command": [
+      "python",
+      "/workspace/package/malicious_server.py"
+    ],
+    "entrypointInferred": true,
+    "workingDirectory": "/workspace/package",
+    "readOnlyRootFs": true,
+    "networkMode": "none",
+    "mounts": [
+      {
+        "hostPath": "./project",
+        "containerPath": "/workspace/project",
+        "readOnly": true
+      }
+    ],
+    "tmpfs": [
+      {
+        "path": "/tmp/mcp-aegis",
+        "sizeMb": 64
+      }
+    ],
+    "environmentAllowlist": [],
+    "resources": {
+      "cpuShares": 128,
+      "memoryMb": 256,
+      "processLimit": 32,
+      "timeoutSeconds": 60
+    },
+    "hardeningFlags": {
+      "blockRemoteAccess": true,
+      "requireDigestPin": false,
+      "readOnlyRootFs": true,
+      "noHostEnvPassthrough": true,
+      "disableInboundListeners": true
+    },
+    "dockerCommand": [
+      "docker",
+      "run",
+      "--rm",
+      "--read-only",
+      "--network",
+      "none",
+      "--memory",
+      "256m",
+      "--pids-limit",
+      "32",
+      "-v",
+      "./project:/workspace/project:ro",
+      "--tmpfs",
+      "/tmp/mcp-aegis:rw,noexec,nosuid,size=64m",
+      "-w",
+      "/workspace/package",
+      "python:3.11-slim",
+      "python",
+      "/workspace/package/malicious_server.py"
+    ]
+  },
+  "launchAuditEvent": {
+    "eventType": "runtime-plan-generated",
+    "generatedAt": "2026-03-18T13:20:05.461737+00:00",
+    "serverName": "fixture/malicious-server",
+    "serverVersion": "0.0.1",
+    "decision": "review",
+    "runtimeProfile": "restricted",
+    "engine": "docker",
+    "allowExecution": true,
+    "networkMode": "none",
+    "mountCount": 1,
+    "tmpfsCount": 1
   },
   "recommendedActions": [
     "Run this MCP server only inside an isolated runtime and require manual review of command execution paths.",

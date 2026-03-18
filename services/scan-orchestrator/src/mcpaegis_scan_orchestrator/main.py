@@ -12,6 +12,11 @@ from mcpaegis_policy.loader import load_policy_bundle
 from mcpaegis_policy.planner import build_runtime_plan
 
 try:
+    from mcpaegis_scan_orchestrator.launcher import build_launch_audit_event, build_sandbox_spec
+except ModuleNotFoundError:
+    from launcher import build_launch_audit_event, build_sandbox_spec
+
+try:
     from mcpaegis_scan_orchestrator.recommendations import build_recommendations
 except ModuleNotFoundError:
     from recommendations import build_recommendations
@@ -36,6 +41,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--transport", action="append", default=[], help="Transport values such as stdio or streamable-http.")
     parser.add_argument("--ownership-verified", action="store_true", help="Whether the publisher or operator ownership is verified.")
     parser.add_argument("--remote-url", default="", help="Remote MCP URL if applicable.")
+    parser.add_argument("--container-image", default="", help="Optional container image override for sandbox planning.")
+    parser.add_argument("--run-command", action="append", default=[], help="Optional explicit command for sandbox planning. Repeat for multiple args.")
     parser.add_argument("--output", default="", help="Optional JSON report output path.")
     parser.add_argument("--sql-output", default="", help="Optional PostgreSQL import SQL output path.")
     return parser
@@ -43,6 +50,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main() -> None:
     args = build_parser().parse_args()
+    generated_at = datetime.now(timezone.utc).isoformat()
 
     report = scan_path(args.target)
     score = score_findings(report.findings)
@@ -66,10 +74,30 @@ def main() -> None:
             "remoteUrl": args.remote_url,
         },
     )
+    sandbox_spec = build_sandbox_spec(
+        runtime_plan,
+        {
+            "name": args.server_name or _default_server_name(args.target),
+            "version": args.server_version,
+        },
+        target_path=args.target,
+        image=args.container_image or None,
+        command=args.run_command or None,
+    )
+    launch_audit_event = build_launch_audit_event(
+        {
+            "name": args.server_name or _default_server_name(args.target),
+            "version": args.server_version,
+        },
+        decision.to_dict(),
+        runtime_plan,
+        sandbox_spec,
+        generated_at,
+    )
 
     document = {
         "reportVersion": "v1alpha1",
-        "generatedAt": datetime.now(timezone.utc).isoformat(),
+        "generatedAt": generated_at,
         "scannerName": "mcpaegis-static",
         "scannerVersion": "0.1.0",
         "server": {
@@ -85,6 +113,8 @@ def main() -> None:
         "riskScore": score,
         "policyDecision": decision.to_dict(),
         "runtimePlan": runtime_plan,
+        "sandboxSpec": sandbox_spec,
+        "launchAuditEvent": launch_audit_event,
         "recommendedActions": recommendations,
     }
 

@@ -233,6 +233,12 @@ func TestHandleRuntimePlanByName(t *testing.T) {
 					"profileName":   "restricted",
 					"executionMode": "sandboxed",
 				},
+				SandboxSpec: map[string]any{
+					"engine": "docker",
+				},
+				LaunchAuditEvent: map[string]any{
+					"eventType": "runtime-plan-generated",
+				},
 			},
 		},
 	})
@@ -246,7 +252,7 @@ func TestHandleRuntimePlanByName(t *testing.T) {
 	}
 
 	body := rec.Body.String()
-	if !strings.Contains(body, `"executionMode":"sandboxed"`) {
+	if !strings.Contains(body, `"executionMode":"sandboxed"`) || !strings.Contains(body, `"engine":"docker"`) {
 		t.Fatalf("unexpected runtime plan body=%s", body)
 	}
 }
