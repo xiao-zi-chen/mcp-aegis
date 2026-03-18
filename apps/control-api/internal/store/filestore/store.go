@@ -22,13 +22,15 @@ type Store struct {
 	snapshotPath string
 	policiesDir  string
 	reportsDir   string
+	auditDir     string
 }
 
-func New(snapshotPath, policiesDir, reportsDir string) *Store {
+func New(snapshotPath, policiesDir, reportsDir, auditDir string) *Store {
 	return &Store{
 		snapshotPath: snapshotPath,
 		policiesDir:  policiesDir,
 		reportsDir:   reportsDir,
+		auditDir:     auditDir,
 	}
 }
 
@@ -175,6 +177,35 @@ func (s *Store) GetAssessment(ctx context.Context, serverName string) (domain.As
 	return domain.Assessment{}, false, nil
 }
 
+func (s *Store) ListAuditEvents(_ context.Context) ([]domain.AuditEvent, error) {
+	entries, err := os.ReadDir(s.auditDir)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("read audit dir: %w", err)
+	}
+
+	events := make([]domain.AuditEvent, 0)
+	for _, entry := range entries {
+		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".jsonl") {
+			continue
+		}
+
+		fileEvents, err := loadAuditEvents(filepath.Join(s.auditDir, entry.Name()))
+		if err != nil {
+			return nil, err
+		}
+		events = append(events, fileEvents...)
+	}
+
+	sort.Slice(events, func(i, j int) bool {
+		return events[i].GeneratedAt > events[j].GeneratedAt
+	})
+
+	return events, nil
+}
+
 func loadPolicy(path string) (domain.PolicyBundle, error) {
 	bytes, err := os.ReadFile(path)
 	if err != nil {
@@ -216,6 +247,36 @@ func loadAssessment(path string) (domain.Assessment, bool, error) {
 	}
 
 	return assessment, true, nil
+}
+
+func loadAuditEvents(path string) ([]domain.AuditEvent, error) {
+	bytes, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("read audit file %s: %w", path, err)
+	}
+
+	lines := strings.Split(string(bytes), "\n")
+	events := make([]domain.AuditEvent, 0, len(lines))
+	for _, rawLine := range lines {
+		line := strings.TrimSpace(rawLine)
+		if line == "" {
+			continue
+		}
+
+		payload := map[string]any{}
+		if err := json.Unmarshal([]byte(line), &payload); err != nil {
+			return nil, fmt.Errorf("decode audit line in %s: %w", path, err)
+		}
+
+		events = append(events, domain.AuditEvent{
+			EventType:   stringValue(payload["eventType"]),
+			GeneratedAt: stringValue(payload["generatedAt"]),
+			SourceFile:  path,
+			Data:        payload,
+		})
+	}
+
+	return events, nil
 }
 
 func extractPolicyMetadata(document string) (apiVersion, kind, name string, version int, description string) {
@@ -273,4 +334,9 @@ func splitKeyValue(line string) (key, value string, ok bool) {
 	key = strings.TrimSpace(parts[0])
 	value = strings.Trim(strings.TrimSpace(parts[1]), `"'`)
 	return key, value, true
+}
+
+func stringValue(value any) string {
+	text, _ := value.(string)
+	return text
 }

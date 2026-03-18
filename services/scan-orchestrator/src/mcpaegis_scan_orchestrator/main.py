@@ -104,7 +104,7 @@ def main() -> None:
         sandbox_spec,
         generated_at,
     )
-    launch_result, runtime_launch_event = run_sandbox_plan(
+    launch_result, runtime_launch_event, runtime_capabilities = run_sandbox_plan(
         sandbox_spec,
         execute=args.execute,
         timeout_seconds=runtime_plan.get("resources", {}).get("timeoutSeconds"),
@@ -128,6 +128,7 @@ def main() -> None:
         "riskScore": score,
         "policyDecision": decision.to_dict(),
         "runtimePlan": runtime_plan,
+        "runtimeCapabilities": runtime_capabilities,
         "sandboxSpec": sandbox_spec,
         "launchAuditEvent": launch_audit_event,
         "launchResult": launch_result,

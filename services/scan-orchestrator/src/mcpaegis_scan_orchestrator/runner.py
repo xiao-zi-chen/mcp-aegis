@@ -1,9 +1,17 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-import shutil
 import subprocess
 from typing import Any
+
+try:
+    from mcpaegis_scan_orchestrator.runtime_adapters import resolve_runner_adapter
+except ModuleNotFoundError:
+    from runtime_adapters import resolve_runner_adapter
+
+def detect_runtime_capabilities(sandbox_spec: dict[str, Any], timeout_seconds: int | None = 5) -> dict[str, Any]:
+    adapter = resolve_runner_adapter(sandbox_spec)
+    return adapter.detect_capabilities(timeout_seconds=timeout_seconds)
 
 
 def run_sandbox_plan(
@@ -11,9 +19,10 @@ def run_sandbox_plan(
     *,
     execute: bool,
     timeout_seconds: int | None = None,
-) -> tuple[dict[str, Any], dict[str, Any]]:
+) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
     generated_at = datetime.now(timezone.utc).isoformat()
-    docker_command = sandbox_spec.get("dockerCommand", [])
+    adapter = resolve_runner_adapter(sandbox_spec)
+    capabilities = adapter.detect_capabilities(timeout_seconds=5)
 
     if not sandbox_spec.get("allowExecution", False):
         result = {
@@ -25,7 +34,7 @@ def run_sandbox_plan(
             "reason": "policy denied execution",
             "generatedAt": generated_at,
         }
-        return result, _build_launch_event("runtime-launch-blocked", sandbox_spec, result)
+        return result, _build_launch_event("runtime-launch-blocked", sandbox_spec, result), capabilities
 
     if not execute:
         result = {
@@ -37,27 +46,45 @@ def run_sandbox_plan(
             "reason": "dry-run only",
             "generatedAt": generated_at,
         }
-        return result, _build_launch_event("runtime-launch-planned", sandbox_spec, result)
+        return result, _build_launch_event("runtime-launch-planned", sandbox_spec, result), capabilities
 
-    if not docker_command or shutil.which(docker_command[0]) is None:
+    if not capabilities.get("executeSupported", False) or not adapter.has_launch_command():
         result = {
             "status": "unavailable",
             "executed": False,
             "exitCode": None,
             "stdout": "",
             "stderr": "",
-            "reason": "docker executable not available",
+            "reason": capabilities.get("reason", "runtime unavailable"),
             "generatedAt": generated_at,
         }
-        return result, _build_launch_event("runtime-launch-unavailable", sandbox_spec, result)
+        return result, _build_launch_event("runtime-launch-unavailable", sandbox_spec, result), capabilities
 
-    completed = subprocess.run(
-        docker_command,
-        capture_output=True,
-        text=True,
-        timeout=timeout_seconds,
-        check=False,
-    )
+    try:
+        completed = adapter.execute(timeout_seconds=timeout_seconds)
+    except subprocess.TimeoutExpired:
+        result = {
+            "status": "timed_out",
+            "executed": True,
+            "exitCode": None,
+            "stdout": "",
+            "stderr": "",
+            "reason": "sandbox execution timed out",
+            "generatedAt": generated_at,
+        }
+        return result, _build_launch_event("runtime-launch-timeout", sandbox_spec, result), capabilities
+    except OSError as exc:
+        result = {
+            "status": "unavailable",
+            "executed": False,
+            "exitCode": None,
+            "stdout": "",
+            "stderr": "",
+            "reason": str(exc),
+            "generatedAt": generated_at,
+        }
+        return result, _build_launch_event("runtime-launch-unavailable", sandbox_spec, result), capabilities
+
     result = {
         "status": "succeeded" if completed.returncode == 0 else "failed",
         "executed": True,
@@ -67,7 +94,7 @@ def run_sandbox_plan(
         "reason": "",
         "generatedAt": generated_at,
     }
-    return result, _build_launch_event("runtime-launch-executed", sandbox_spec, result)
+    return result, _build_launch_event("runtime-launch-executed", sandbox_spec, result), capabilities
 
 
 def _build_launch_event(event_type: str, sandbox_spec: dict[str, Any], result: dict[str, Any]) -> dict[str, Any]:

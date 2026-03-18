@@ -16,6 +16,7 @@ type Config struct {
 	SnapshotPath  string
 	PoliciesDir   string
 	ReportsDir    string
+	AuditDir      string
 }
 
 func Load() (Config, error) {
@@ -27,6 +28,7 @@ func Load() (Config, error) {
 		SnapshotPath:  envOrDefault("MCP_AEGIS_SNAPSHOT_PATH", "services/registry-sync/examples/latest.json"),
 		PoliciesDir:   envOrDefault("MCP_AEGIS_POLICIES_DIR", "packages/policy-spec/examples"),
 		ReportsDir:    envOrDefault("MCP_AEGIS_REPORTS_DIR", "services/scan-orchestrator/examples/reports"),
+		AuditDir:      envOrDefault("MCP_AEGIS_AUDIT_DIR", "services/scan-orchestrator/examples/audit"),
 	}
 
 	if value := os.Getenv("MCP_AEGIS_API_READ_TIMEOUT_SECONDS"); value != "" {
@@ -48,6 +50,7 @@ func Load() (Config, error) {
 	cfg.SnapshotPath = resolveRepoPath(cfg.SnapshotPath)
 	cfg.PoliciesDir = resolveRepoPath(cfg.PoliciesDir)
 	cfg.ReportsDir = resolveRepoPath(cfg.ReportsDir)
+	cfg.AuditDir = resolveRepoPath(cfg.AuditDir)
 
 	return cfg, nil
 }

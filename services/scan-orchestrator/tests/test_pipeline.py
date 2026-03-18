@@ -65,6 +65,8 @@ class PipelineTest(unittest.TestCase):
             self.assertGreaterEqual(len(report["recommendedActions"]), 1)
             self.assertEqual(report["runtimePlan"]["executionMode"], "sandboxed")
             self.assertTrue(report["runtimePlan"]["requiresManualApproval"])
+            self.assertEqual(report["runtimeCapabilities"]["engine"], "docker")
+            self.assertEqual(report["runtimeCapabilities"]["adapter"], "docker")
             self.assertEqual(report["sandboxSpec"]["engine"], "docker")
             self.assertEqual(report["launchAuditEvent"]["eventType"], "runtime-plan-generated")
             self.assertEqual(report["sandboxSpec"]["dockerCommand"][0], "docker")

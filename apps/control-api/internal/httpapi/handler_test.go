@@ -16,6 +16,7 @@ type fakeStore struct {
 	ready    bool
 	policies []domain.PolicyBundle
 	assess   []domain.Assessment
+	audit    []domain.AuditEvent
 }
 
 func (f fakeStore) Snapshot(context.Context) (domain.Snapshot, bool, error) {
@@ -59,6 +60,10 @@ func (f fakeStore) GetAssessment(_ context.Context, serverName string) (domain.A
 		}
 	}
 	return domain.Assessment{}, false, nil
+}
+
+func (f fakeStore) ListAuditEvents(context.Context) ([]domain.AuditEvent, error) {
+	return f.audit, nil
 }
 
 func TestHandleServers(t *testing.T) {
@@ -233,6 +238,10 @@ func TestHandleRuntimePlanByName(t *testing.T) {
 					"profileName":   "restricted",
 					"executionMode": "sandboxed",
 				},
+				RuntimeCapabilities: map[string]any{
+					"engine":          "docker",
+					"binaryAvailable": false,
+				},
 				SandboxSpec: map[string]any{
 					"engine": "docker",
 				},
@@ -258,7 +267,43 @@ func TestHandleRuntimePlanByName(t *testing.T) {
 	}
 
 	body := rec.Body.String()
-	if !strings.Contains(body, `"executionMode":"sandboxed"`) || !strings.Contains(body, `"engine":"docker"`) || !strings.Contains(body, `"status":"planned"`) {
+	if !strings.Contains(body, `"executionMode":"sandboxed"`) || !strings.Contains(body, `"engine":"docker"`) || !strings.Contains(body, `"status":"planned"`) || !strings.Contains(body, `"binaryAvailable":false`) {
 		t.Fatalf("unexpected runtime plan body=%s", body)
+	}
+}
+
+func TestHandleAuditEvents(t *testing.T) {
+	h := New(fakeStore{
+		audit: []domain.AuditEvent{
+			{
+				EventType:   "runtime-launch-planned",
+				GeneratedAt: "2026-03-18T14:15:48Z",
+				Data: map[string]any{
+					"status":     "planned",
+					"serverName": "fixture/malicious-server",
+				},
+			},
+			{
+				EventType:   "runtime-launch-unavailable",
+				GeneratedAt: "2026-03-18T14:16:48Z",
+				Data: map[string]any{
+					"status":     "unavailable",
+					"serverName": "fixture/other-server",
+				},
+			},
+		},
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/audit-events?eventType=runtime-launch-planned&status=planned&q=malicious", nil)
+	rec := httptest.NewRecorder()
+	h.Routes().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", rec.Code)
+	}
+
+	body := rec.Body.String()
+	if !strings.Contains(body, `"runtime-launch-planned"`) || strings.Contains(body, `"runtime-launch-unavailable"`) {
+		t.Fatalf("unexpected audit response body=%s", body)
 	}
 }

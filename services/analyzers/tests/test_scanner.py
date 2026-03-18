@@ -1,5 +1,12 @@
+import sys
 import unittest
 from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[3]
+SRC = ROOT / "services" / "analyzers" / "src"
+if str(SRC) not in sys.path:
+    sys.path.insert(0, str(SRC))
 
 from mcpaegis_analyzers.scanner import scan_path
 from mcpaegis_analyzers.scoring import score_findings

@@ -29,6 +29,7 @@ func (h *Handler) Routes() http.Handler {
 	mux.HandleFunc("/api/v1/assessments", h.handleAssessments)
 	mux.HandleFunc("/api/v1/assessments/", h.handleAssessmentByName)
 	mux.HandleFunc("/api/v1/assessment-summary", h.handleAssessmentSummary)
+	mux.HandleFunc("/api/v1/audit-events", h.handleAuditEvents)
 	mux.HandleFunc("/api/v1/runtime-plans/", h.handleRuntimePlanByName)
 	mux.HandleFunc("/api/v1/policies", h.handlePolicies)
 	mux.HandleFunc("/api/v1/policies/", h.handlePolicyByName)
@@ -219,6 +220,39 @@ func (h *Handler) handlePolicyByName(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, policy)
 }
 
+func (h *Handler) handleAuditEvents(w http.ResponseWriter, r *http.Request) {
+	events, err := h.store.ListAuditEvents(r.Context())
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	filtered := make([]domain.AuditEvent, 0, len(events))
+	query := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("q")))
+	eventType := strings.TrimSpace(r.URL.Query().Get("eventType"))
+	status := strings.TrimSpace(r.URL.Query().Get("status"))
+	for _, event := range events {
+		if eventType != "" && event.EventType != eventType {
+			continue
+		}
+		if status != "" && stringValue(event.Data["status"]) != status {
+			continue
+		}
+		if query != "" {
+			payload := strings.ToLower(mustJSON(event.Data))
+			if !strings.Contains(payload, query) {
+				continue
+			}
+		}
+		filtered = append(filtered, event)
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{
+		"events": filtered,
+		"count":  len(filtered),
+	})
+}
+
 func (h *Handler) handleRuntimePlanByName(w http.ResponseWriter, r *http.Request) {
 	name := strings.TrimPrefix(r.URL.Path, "/api/v1/runtime-plans/")
 	name, err := url.PathUnescape(name)
@@ -238,13 +272,14 @@ func (h *Handler) handleRuntimePlanByName(w http.ResponseWriter, r *http.Request
 	}
 
 	writeJSON(w, http.StatusOK, map[string]any{
-		"server":             assessment.Server,
-		"policyDecision":     assessment.PolicyDecision,
-		"runtimePlan":        assessment.RuntimePlan,
-		"sandboxSpec":        assessment.SandboxSpec,
-		"launchAuditEvent":   assessment.LaunchAuditEvent,
-		"launchResult":       assessment.LaunchResult,
-		"runtimeLaunchEvent": assessment.RuntimeLaunchEvent,
+		"server":              assessment.Server,
+		"policyDecision":      assessment.PolicyDecision,
+		"runtimePlan":         assessment.RuntimePlan,
+		"runtimeCapabilities": assessment.RuntimeCapabilities,
+		"sandboxSpec":         assessment.SandboxSpec,
+		"launchAuditEvent":    assessment.LaunchAuditEvent,
+		"launchResult":        assessment.LaunchResult,
+		"runtimeLaunchEvent":  assessment.RuntimeLaunchEvent,
 	})
 }
 
@@ -301,4 +336,17 @@ func filterAssessments(assessments []domain.Assessment, r *http.Request) ([]doma
 	}
 
 	return filtered, nil
+}
+
+func stringValue(value any) string {
+	text, _ := value.(string)
+	return text
+}
+
+func mustJSON(value any) string {
+	bytes, err := json.Marshal(value)
+	if err != nil {
+		return ""
+	}
+	return string(bytes)
 }

@@ -1,12 +1,18 @@
+import sys
 import unittest
 from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[3]
+SRC = ROOT / "packages" / "sdk-python" / "src"
+if str(SRC) not in sys.path:
+    sys.path.insert(0, str(SRC))
 
 from mcpaegis_policy.evaluator import evaluate_policy
 from mcpaegis_policy.loader import load_policy_bundle
 from mcpaegis_policy.planner import build_runtime_plan
 
 
-ROOT = Path(__file__).resolve().parents[3]
 POLICY_PATH = ROOT / "packages" / "policy-spec" / "examples" / "default-policy.yaml"
 SCHEMA_PATH = ROOT / "packages" / "policy-spec" / "schema.json"
 

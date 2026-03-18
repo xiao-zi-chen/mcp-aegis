@@ -1,0 +1,2 @@
+{"eventType": "runtime-plan-generated", "generatedAt": "2026-03-18T15:15:01.387086+00:00", "serverName": "fixture/malicious-server", "serverVersion": "0.0.1", "decision": "review", "runtimeProfile": "restricted", "engine": "docker", "allowExecution": true, "networkMode": "none", "mountCount": 1, "tmpfsCount": 1}
+{"eventType": "runtime-launch-planned", "generatedAt": "2026-03-18T15:15:01.414436+00:00", "engine": "docker", "executionMode": "planned", "executed": false, "status": "planned", "exitCode": null, "reason": "dry-run only"}

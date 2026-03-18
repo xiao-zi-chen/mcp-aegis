@@ -1,6 +1,6 @@
 {
   "reportVersion": "v1alpha1",
-  "generatedAt": "2026-03-18T14:15:48.563798+00:00",
+  "generatedAt": "2026-03-18T15:15:01.387086+00:00",
   "scannerName": "mcpaegis-static",
   "scannerVersion": "0.1.0",
   "server": {
@@ -148,6 +148,17 @@
       "Outbound networking was detected, so allowlists or full denial should be enforced."
     ]
   },
+  "runtimeCapabilities": {
+    "engine": "docker",
+    "adapter": "docker",
+    "binary": "docker",
+    "resolvedBinary": "",
+    "binaryAvailable": false,
+    "daemonReachable": false,
+    "executeSupported": false,
+    "version": "",
+    "reason": "docker executable not available"
+  },
   "sandboxSpec": {
     "engine": "docker",
     "mode": "planned",
@@ -212,7 +223,7 @@
   },
   "launchAuditEvent": {
     "eventType": "runtime-plan-generated",
-    "generatedAt": "2026-03-18T14:15:48.563798+00:00",
+    "generatedAt": "2026-03-18T15:15:01.387086+00:00",
     "serverName": "fixture/malicious-server",
     "serverVersion": "0.0.1",
     "decision": "review",
@@ -230,11 +241,11 @@
     "stdout": "",
     "stderr": "",
     "reason": "dry-run only",
-    "generatedAt": "2026-03-18T14:15:48.592421+00:00"
+    "generatedAt": "2026-03-18T15:15:01.414436+00:00"
   },
   "runtimeLaunchEvent": {
     "eventType": "runtime-launch-planned",
-    "generatedAt": "2026-03-18T14:15:48.592421+00:00",
+    "generatedAt": "2026-03-18T15:15:01.414436+00:00",
     "engine": "docker",
     "executionMode": "planned",
     "executed": false,

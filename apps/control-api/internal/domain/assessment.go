@@ -3,20 +3,21 @@ package domain
 import "time"
 
 type Assessment struct {
-	ReportVersion      string           `json:"reportVersion"`
-	GeneratedAt        time.Time        `json:"generatedAt"`
-	ScannerName        string           `json:"scannerName"`
-	ScannerVersion     string           `json:"scannerVersion"`
-	Server             AssessmentServer `json:"server"`
-	ScanReport         ScanReport       `json:"scanReport"`
-	RiskScore          RiskScore        `json:"riskScore"`
-	PolicyDecision     PolicyDecision   `json:"policyDecision"`
-	RuntimePlan        map[string]any   `json:"runtimePlan"`
-	SandboxSpec        map[string]any   `json:"sandboxSpec"`
-	LaunchAuditEvent   map[string]any   `json:"launchAuditEvent"`
-	LaunchResult       map[string]any   `json:"launchResult"`
-	RuntimeLaunchEvent map[string]any   `json:"runtimeLaunchEvent"`
-	RecommendedActions []string         `json:"recommendedActions"`
+	ReportVersion       string           `json:"reportVersion"`
+	GeneratedAt         time.Time        `json:"generatedAt"`
+	ScannerName         string           `json:"scannerName"`
+	ScannerVersion      string           `json:"scannerVersion"`
+	Server              AssessmentServer `json:"server"`
+	ScanReport          ScanReport       `json:"scanReport"`
+	RiskScore           RiskScore        `json:"riskScore"`
+	PolicyDecision      PolicyDecision   `json:"policyDecision"`
+	RuntimePlan         map[string]any   `json:"runtimePlan"`
+	RuntimeCapabilities map[string]any   `json:"runtimeCapabilities"`
+	SandboxSpec         map[string]any   `json:"sandboxSpec"`
+	LaunchAuditEvent    map[string]any   `json:"launchAuditEvent"`
+	LaunchResult        map[string]any   `json:"launchResult"`
+	RuntimeLaunchEvent  map[string]any   `json:"runtimeLaunchEvent"`
+	RecommendedActions  []string         `json:"recommendedActions"`
 }
 
 type AssessmentServer struct {
