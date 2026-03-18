@@ -1,6 +1,6 @@
 {
   "reportVersion": "v1alpha1",
-  "generatedAt": "2026-03-18T13:20:05.461737+00:00",
+  "generatedAt": "2026-03-18T14:15:48.563798+00:00",
   "scannerName": "mcpaegis-static",
   "scannerVersion": "0.1.0",
   "server": {
@@ -212,7 +212,7 @@
   },
   "launchAuditEvent": {
     "eventType": "runtime-plan-generated",
-    "generatedAt": "2026-03-18T13:20:05.461737+00:00",
+    "generatedAt": "2026-03-18T14:15:48.563798+00:00",
     "serverName": "fixture/malicious-server",
     "serverVersion": "0.0.1",
     "decision": "review",
@@ -222,6 +222,25 @@
     "networkMode": "none",
     "mountCount": 1,
     "tmpfsCount": 1
+  },
+  "launchResult": {
+    "status": "planned",
+    "executed": false,
+    "exitCode": null,
+    "stdout": "",
+    "stderr": "",
+    "reason": "dry-run only",
+    "generatedAt": "2026-03-18T14:15:48.592421+00:00"
+  },
+  "runtimeLaunchEvent": {
+    "eventType": "runtime-launch-planned",
+    "generatedAt": "2026-03-18T14:15:48.592421+00:00",
+    "engine": "docker",
+    "executionMode": "planned",
+    "executed": false,
+    "status": "planned",
+    "exitCode": null,
+    "reason": "dry-run only"
   },
   "recommendedActions": [
     "Run this MCP server only inside an isolated runtime and require manual review of command execution paths.",

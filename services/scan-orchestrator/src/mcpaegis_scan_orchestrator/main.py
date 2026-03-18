@@ -15,6 +15,14 @@ try:
     from mcpaegis_scan_orchestrator.launcher import build_launch_audit_event, build_sandbox_spec
 except ModuleNotFoundError:
     from launcher import build_launch_audit_event, build_sandbox_spec
+try:
+    from mcpaegis_scan_orchestrator.runner import run_sandbox_plan
+except ModuleNotFoundError:
+    from runner import run_sandbox_plan
+try:
+    from mcpaegis_scan_orchestrator.audit import append_audit_event
+except ModuleNotFoundError:
+    from audit import append_audit_event
 
 try:
     from mcpaegis_scan_orchestrator.recommendations import build_recommendations
@@ -43,6 +51,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--remote-url", default="", help="Remote MCP URL if applicable.")
     parser.add_argument("--container-image", default="", help="Optional container image override for sandbox planning.")
     parser.add_argument("--run-command", action="append", default=[], help="Optional explicit command for sandbox planning. Repeat for multiple args.")
+    parser.add_argument("--execute", action="store_true", help="Attempt to execute the generated sandbox command.")
+    parser.add_argument("--audit-output", default="", help="Optional JSONL file for appending audit events.")
     parser.add_argument("--output", default="", help="Optional JSON report output path.")
     parser.add_argument("--sql-output", default="", help="Optional PostgreSQL import SQL output path.")
     return parser
@@ -94,6 +104,11 @@ def main() -> None:
         sandbox_spec,
         generated_at,
     )
+    launch_result, runtime_launch_event = run_sandbox_plan(
+        sandbox_spec,
+        execute=args.execute,
+        timeout_seconds=runtime_plan.get("resources", {}).get("timeoutSeconds"),
+    )
 
     document = {
         "reportVersion": "v1alpha1",
@@ -115,6 +130,8 @@ def main() -> None:
         "runtimePlan": runtime_plan,
         "sandboxSpec": sandbox_spec,
         "launchAuditEvent": launch_audit_event,
+        "launchResult": launch_result,
+        "runtimeLaunchEvent": runtime_launch_event,
         "recommendedActions": recommendations,
     }
 
@@ -135,6 +152,10 @@ def main() -> None:
         sql_output_path = Path(args.sql_output)
         sql_output_path.parent.mkdir(parents=True, exist_ok=True)
         sql_output_path.write_text(build_sql(document), encoding="utf-8")
+
+    if args.audit_output:
+        append_audit_event(args.audit_output, launch_audit_event)
+        append_audit_event(args.audit_output, runtime_launch_event)
 
 
 def _resolve_repo_path(path: str) -> str:

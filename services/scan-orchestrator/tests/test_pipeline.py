@@ -19,6 +19,7 @@ class PipelineTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp_dir:
             output_path = Path(tmp_dir) / "report.json"
             sql_output_path = Path(tmp_dir) / "report.sql"
+            audit_output_path = Path(tmp_dir) / "audit.jsonl"
             env = {
                 **os.environ,
                 "PYTHONPATH": os.pathsep.join(
@@ -44,6 +45,8 @@ class PipelineTest(unittest.TestCase):
                     "fixture/malicious-server",
                     "--server-version",
                     "0.0.1",
+                    "--audit-output",
+                    str(audit_output_path),
                     "--output",
                     str(output_path),
                     "--sql-output",
@@ -65,10 +68,15 @@ class PipelineTest(unittest.TestCase):
             self.assertEqual(report["sandboxSpec"]["engine"], "docker")
             self.assertEqual(report["launchAuditEvent"]["eventType"], "runtime-plan-generated")
             self.assertEqual(report["sandboxSpec"]["dockerCommand"][0], "docker")
+            self.assertEqual(report["launchResult"]["status"], "planned")
+            self.assertEqual(report["runtimeLaunchEvent"]["eventType"], "runtime-launch-planned")
 
             sql_payload = sql_output_path.read_text(encoding="utf-8")
             self.assertIn("INSERT INTO policy_evaluations", sql_payload)
             self.assertIn("fixture/malicious-server", sql_payload)
+
+            audit_lines = audit_output_path.read_text(encoding="utf-8").strip().splitlines()
+            self.assertEqual(len(audit_lines), 2)
 
 
 if __name__ == "__main__":

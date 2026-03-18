@@ -41,6 +41,7 @@ Available now:
 - assessment filtering and summary query endpoints
 - concrete runtime plan generation and runtime plan API endpoint
 - planned sandbox spec generation with dry-run Docker command output
+- sandbox runner skeleton with launch result and JSONL audit sink
 
 Planned next:
 
@@ -118,6 +119,7 @@ python services/scan-orchestrator/src/mcpaegis_scan_orchestrator/main.py `
   --transport stdio `
   --server-name fixture/malicious-server `
   --container-image python:3.11-slim `
+  --audit-output tmp/fixture-malicious-server.audit.jsonl `
   --output services/scan-orchestrator/examples/reports/fixture-malicious-server.json `
   --sql-output tmp/fixture-malicious-server.sql
 ```

@@ -18,6 +18,8 @@ Current scope:
 - policy evaluation
 - concrete runtime plan generation from policy profiles
 - dry-run sandbox spec and Docker command generation
+- runner skeleton with dry-run and execute modes
+- JSONL audit event sink
 - JSON report output
 - PostgreSQL import SQL export
 
@@ -32,6 +34,7 @@ python services/scan-orchestrator/src/mcpaegis_scan_orchestrator/main.py `
   --transport stdio `
   --server-name fixture/malicious-server `
   --container-image python:3.11-slim `
+  --audit-output tmp/fixture-malicious-server.audit.jsonl `
   --output services/scan-orchestrator/examples/reports/fixture-malicious-server.json `
   --sql-output tmp/fixture-malicious-server.sql
 ```

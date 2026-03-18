@@ -14,6 +14,8 @@ type Assessment struct {
 	RuntimePlan        map[string]any   `json:"runtimePlan"`
 	SandboxSpec        map[string]any   `json:"sandboxSpec"`
 	LaunchAuditEvent   map[string]any   `json:"launchAuditEvent"`
+	LaunchResult       map[string]any   `json:"launchResult"`
+	RuntimeLaunchEvent map[string]any   `json:"runtimeLaunchEvent"`
 	RecommendedActions []string         `json:"recommendedActions"`
 }
 

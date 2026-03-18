@@ -22,6 +22,7 @@ Current scope:
 - assessment summary endpoint for operator dashboards
 - runtime plan lookup endpoint for an individual server assessment
 - runtime plan endpoint also returns sandbox spec and launch audit event
+- runtime plan endpoint also returns launch result and runtime launch event
 
 Run locally:
 
