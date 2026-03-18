@@ -1,6 +1,6 @@
 # control-api
 
-Planned responsibility:
+Current responsibility:
 
 - expose registry and policy APIs
 - serve findings and audit metadata
@@ -11,8 +11,22 @@ Suggested stack:
 - Go
 - Postgres
 
-Initial scope:
+Current scope:
 
 - health endpoint
-- package metadata query
-- policy bundle query
+- readiness endpoint
+- registry snapshot-backed server listing
+- policy bundle listing and lookup
+
+Run locally:
+
+```powershell
+cd apps/control-api
+go run .\cmd\control-api
+```
+
+Important environment variables:
+
+- `MCP_AEGIS_API_ADDRESS`
+- `MCP_AEGIS_SNAPSHOT_PATH`
+- `MCP_AEGIS_POLICIES_DIR`
