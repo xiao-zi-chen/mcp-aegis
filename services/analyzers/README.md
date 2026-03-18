@@ -14,6 +14,10 @@ Current scope:
 - secret and environment access heuristic
 - listener exposure heuristic
 - suspicious metadata detector
+- package lifecycle script detector
+- Python build hook detector
+- prompt and tool metadata poisoning detector
+- suspicious broad credential request detector
 
 Run locally:
 

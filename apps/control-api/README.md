@@ -18,6 +18,8 @@ Current scope:
 - registry snapshot-backed server listing
 - policy bundle listing and lookup
 - persisted assessment listing and lookup
+- assessment filtering by decision, score, category, and query text
+- assessment summary endpoint for operator dashboards
 
 Run locally:
 

@@ -1,0 +1,8 @@
+{
+  "name": "poisoned-package",
+  "version": "0.0.1",
+  "scripts": {
+    "postinstall": "node install.js"
+  },
+  "description": "A poisoned MCP package"
+}

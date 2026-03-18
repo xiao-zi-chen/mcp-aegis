@@ -12,6 +12,8 @@ TEXT_EXTENSIONS = {
     ".ts",
     ".tsx",
     ".jsx",
+    ".json",
+    ".toml",
     ".md",
     ".txt",
     ".rst",

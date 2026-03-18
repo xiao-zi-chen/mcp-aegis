@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
+	"github.com/xiao-zi-chen/mcp-aegis/apps/control-api/internal/domain"
 	"github.com/xiao-zi-chen/mcp-aegis/apps/control-api/internal/store"
 )
 
@@ -26,6 +28,7 @@ func (h *Handler) Routes() http.Handler {
 	mux.HandleFunc("/api/v1/servers/", h.handleServerByName)
 	mux.HandleFunc("/api/v1/assessments", h.handleAssessments)
 	mux.HandleFunc("/api/v1/assessments/", h.handleAssessmentByName)
+	mux.HandleFunc("/api/v1/assessment-summary", h.handleAssessmentSummary)
 	mux.HandleFunc("/api/v1/policies", h.handlePolicies)
 	mux.HandleFunc("/api/v1/policies/", h.handlePolicyByName)
 	return mux
@@ -125,9 +128,15 @@ func (h *Handler) handleAssessments(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	filtered, err := filterAssessments(assessments, r)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
 	writeJSON(w, http.StatusOK, map[string]any{
-		"assessments": assessments,
-		"count":       len(assessments),
+		"assessments": filtered,
+		"count":       len(filtered),
 	})
 }
 
@@ -151,6 +160,40 @@ func (h *Handler) handleAssessmentByName(w http.ResponseWriter, r *http.Request)
 	}
 
 	writeJSON(w, http.StatusOK, assessment)
+}
+
+func (h *Handler) handleAssessmentSummary(w http.ResponseWriter, r *http.Request) {
+	assessments, err := h.store.ListAssessments(r.Context())
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	filtered, err := filterAssessments(assessments, r)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	byDecision := map[string]int{}
+	byCategory := map[string]int{}
+	maxScore := 0.0
+	for _, assessment := range filtered {
+		byDecision[assessment.PolicyDecision.Decision]++
+		if assessment.RiskScore.Score > maxScore {
+			maxScore = assessment.RiskScore.Score
+		}
+		for category, count := range assessment.RiskScore.CategoryCounts {
+			byCategory[category] += count
+		}
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{
+		"count":      len(filtered),
+		"byDecision": byDecision,
+		"byCategory": byCategory,
+		"maxScore":   maxScore,
+	})
 }
 
 func (h *Handler) handlePolicyByName(w http.ResponseWriter, r *http.Request) {
@@ -188,4 +231,44 @@ func writeJSON(w http.ResponseWriter, status int, payload any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(payload)
+}
+
+func filterAssessments(assessments []domain.Assessment, r *http.Request) ([]domain.Assessment, error) {
+	decision := strings.TrimSpace(r.URL.Query().Get("decision"))
+	category := strings.TrimSpace(r.URL.Query().Get("category"))
+	query := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("q")))
+
+	minScore := 0.0
+	if raw := strings.TrimSpace(r.URL.Query().Get("minScore")); raw != "" {
+		parsed, err := strconv.ParseFloat(raw, 64)
+		if err != nil {
+			return nil, err
+		}
+		minScore = parsed
+	}
+
+	filtered := make([]domain.Assessment, 0, len(assessments))
+	for _, assessment := range assessments {
+		if decision != "" && assessment.PolicyDecision.Decision != decision {
+			continue
+		}
+		if assessment.RiskScore.Score < minScore {
+			continue
+		}
+		if category != "" {
+			if _, ok := assessment.RiskScore.CategoryCounts[category]; !ok {
+				continue
+			}
+		}
+		if query != "" {
+			name := strings.ToLower(assessment.Server.Name)
+			target := strings.ToLower(assessment.Server.TargetPath)
+			if !strings.Contains(name, query) && !strings.Contains(target, query) {
+				continue
+			}
+		}
+		filtered = append(filtered, assessment)
+	}
+
+	return filtered, nil
 }

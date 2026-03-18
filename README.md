@@ -38,6 +38,7 @@ Available now:
 - working end-to-end scan orchestrator
 - persisted assessment reports queryable via `control-api`
 - PostgreSQL import SQL export for scan decisions
+- assessment filtering and summary query endpoints
 
 Planned next:
 
@@ -99,6 +100,7 @@ Example endpoints:
 - `GET /api/v1/servers/{name}`
 - `GET /api/v1/assessments`
 - `GET /api/v1/assessments/{serverName}`
+- `GET /api/v1/assessment-summary`
 - `GET /api/v1/policies`
 - `GET /api/v1/policies/{name}`
 

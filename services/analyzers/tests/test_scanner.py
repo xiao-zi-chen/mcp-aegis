@@ -30,6 +30,17 @@ class ScannerTest(unittest.TestCase):
         self.assertEqual(score["score"], 0)
         self.assertEqual(score["decisionClass"], "trusted")
 
+    def test_poisoned_package_metadata_is_detected(self) -> None:
+        report = scan_path(str(FIXTURES / "poisoned_package"))
+        keys = {finding.finding_key for finding in report.findings}
+        score = score_findings(report.findings)
+
+        self.assertIn("manifest-install-script", keys)
+        self.assertIn("python-build-hook", keys)
+        self.assertIn("prompt-poisoning-metadata", keys)
+        self.assertIn("suspicious-credential-request", keys)
+        self.assertGreaterEqual(score["score"], 40)
+
 
 if __name__ == "__main__":
     unittest.main()

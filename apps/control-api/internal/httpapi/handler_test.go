@@ -154,3 +154,71 @@ func TestHandleAssessmentByName(t *testing.T) {
 		t.Fatalf("expected body to contain decision, body=%s", body)
 	}
 }
+
+func TestHandleAssessmentsFilters(t *testing.T) {
+	h := New(fakeStore{
+		assess: []domain.Assessment{
+			{
+				Server: domain.AssessmentServer{Name: "fixture/malicious-server", TargetPath: "fixtures/malicious.py"},
+				RiskScore: domain.RiskScore{
+					Score:          41,
+					DecisionClass:  "review",
+					CategoryCounts: map[string]int{"execution": 1},
+				},
+				PolicyDecision: domain.PolicyDecision{Decision: "review"},
+			},
+			{
+				Server: domain.AssessmentServer{Name: "fixture/benign-server", TargetPath: "fixtures/benign.py"},
+				RiskScore: domain.RiskScore{
+					Score:          0,
+					DecisionClass:  "trusted",
+					CategoryCounts: map[string]int{},
+				},
+				PolicyDecision: domain.PolicyDecision{Decision: "allow"},
+			},
+		},
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/assessments?decision=review&minScore=20&category=execution&q=malicious", nil)
+	rec := httptest.NewRecorder()
+	h.Routes().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", rec.Code)
+	}
+
+	body := rec.Body.String()
+	if !strings.Contains(body, `"fixture/malicious-server"`) || strings.Contains(body, `"fixture/benign-server"`) {
+		t.Fatalf("unexpected filtered body=%s", body)
+	}
+}
+
+func TestHandleAssessmentSummary(t *testing.T) {
+	h := New(fakeStore{
+		assess: []domain.Assessment{
+			{
+				Server:         domain.AssessmentServer{Name: "fixture/malicious-server"},
+				RiskScore:      domain.RiskScore{Score: 41, CategoryCounts: map[string]int{"execution": 1, "network": 1}},
+				PolicyDecision: domain.PolicyDecision{Decision: "review"},
+			},
+			{
+				Server:         domain.AssessmentServer{Name: "fixture/remote-server"},
+				RiskScore:      domain.RiskScore{Score: 76, CategoryCounts: map[string]int{"network": 2}},
+				PolicyDecision: domain.PolicyDecision{Decision: "deny"},
+			},
+		},
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/assessment-summary", nil)
+	rec := httptest.NewRecorder()
+	h.Routes().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", rec.Code)
+	}
+
+	body := rec.Body.String()
+	if !strings.Contains(body, `"review":1`) || !strings.Contains(body, `"deny":1`) || !strings.Contains(body, `"maxScore":76`) {
+		t.Fatalf("unexpected summary body=%s", body)
+	}
+}
